@@ -27,8 +27,7 @@ const swaggerSpec = swaggerJsdoc({
                 '"ver_curiosidades" de la app Django de mascotas virtuales.',
         },
         servers: [
-            { url: 'http://localhost:3000', description: 'Servidor local' },
-            { url: 'https://microservicio-curiosidades.onrender.com', description: 'Render (produccion)' },
+            { url: '/', description: 'Este mismo servidor (funciona igual en local y en Render)' },
         ],
         components: {
             schemas: {
@@ -54,9 +53,15 @@ const swaggerSpec = swaggerJsdoc({
 
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
+// la raiz redirige a la documentacion swagger, para que sea lo primero que
+// se ve al entrar a la URL del servicio (ej: https://tu-servicio.onrender.com/)
+app.get('/', (req, res) => {
+    res.redirect('/api-docs');
+});
+
 /**
  * @swagger
- * /:
+ * /health:
  *   get:
  *     summary: Health check
  *     description: Confirma que el microservicio esta corriendo (util para verificar el deploy en Render).
@@ -75,7 +80,7 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
  *                   type: string
  *                   example: microservicio-curiosidades funcionando
  */
-app.get('/', (req, res) => {
+app.get('/health', (req, res) => {
     res.json({ status: 'ok', mensaje: 'microservicio-curiosidades funcionando' });
 });
 

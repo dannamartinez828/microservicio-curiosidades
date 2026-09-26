@@ -6,7 +6,8 @@ vista `ver_curiosidades` de la app Django de mascotas virtuales.
 
 ## Endpoints
 
-- `GET /` -> health check.
+- `GET /` -> redirige a la documentación Swagger (`/api-docs`).
+- `GET /health` -> health check simple en JSON.
 - `GET /api/curiosidades` -> todas las curiosidades.
 - `GET /api/curiosidades/:especie` -> curiosidades filtradas por especie
   (perro, gato, dragon, robot).
@@ -29,11 +30,9 @@ cp .env.example .env
 npm start
 ```
 
-Probar en el navegador: http://localhost:3000/api/curiosidades/perro
-
-También se puede abrir http://localhost:3000/api-docs para ver la
-documentación Swagger y probar los endpoints ahí mismo, sin necesidad de
-curl ni Postman.
+Probar en el navegador: http://localhost:3000/ (te redirige directo a la
+documentación Swagger) o http://localhost:3000/api/curiosidades/perro
+para ver el JSON crudo.
 
 ## 3. Desplegar en Render
 
@@ -43,7 +42,8 @@ curl ni Postman.
 4. En Environment agregar la variable `DATABASE_URL` con el connection
    string de Neon.
 5. Una vez desplegado, Render da una URL publica, por ejemplo:
-   `https://microservicio-curiosidades.onrender.com`
+   `https://microservicio-curiosidades.onrender.com` — al abrirla en el
+   navegador redirige directo a la documentación Swagger.
 
 ## 4. Conectar con la app Django
 
