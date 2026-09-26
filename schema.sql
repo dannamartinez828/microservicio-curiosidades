@@ -26,3 +26,20 @@ CREATE TABLE IF NOT EXISTS monedas (
     mascota_id INTEGER PRIMARY KEY,
     cantidad INTEGER NOT NULL DEFAULT 0
 );
+
+-- Espejo en Neon de las mascotas que administra Django. El id es el MISMO id
+-- que le asigna Django/SQLite (no es SERIAL, Django lo manda explicito), asi
+-- las dos bases quedan alineadas por el mismo identificador. Django hace un
+-- "upsert" aca cada vez que crea, edita, alimenta o hace jugar a una mascota
+-- (ver gestor_mascotas/microservicio_client.py -> sincronizar_mascota), y
+-- este microservicio expone el CRUD completo (GET/POST/PUT/DELETE) como
+-- endpoint publico para que cualquier consumidor externo -- incluida la IA en
+-- preguntar_ia -- pueda leer el estado real y actual de las mascotas.
+CREATE TABLE IF NOT EXISTS mascotas (
+    id INTEGER PRIMARY KEY,
+    nombre VARCHAR(50) NOT NULL,
+    especie VARCHAR(20) NOT NULL,
+    hambre INTEGER NOT NULL DEFAULT 50,
+    felicidad INTEGER NOT NULL DEFAULT 50,
+    actualizado_en TIMESTAMP NOT NULL DEFAULT now()
+);

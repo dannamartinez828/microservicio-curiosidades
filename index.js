@@ -61,6 +61,28 @@ const swaggerSpec = swaggerJsdoc({
                         cantidad: { type: 'integer', example: 30 },
                     },
                 },
+                Mascota: {
+                    type: 'object',
+                    properties: {
+                        id: { type: 'integer', example: 1 },
+                        nombre: { type: 'string', example: 'Firu' },
+                        especie: { type: 'string', example: 'perro' },
+                        hambre: { type: 'integer', example: 35 },
+                        felicidad: { type: 'integer', example: 68 },
+                        actualizado_en: { type: 'string', format: 'date-time' },
+                    },
+                },
+                MascotaEntrada: {
+                    type: 'object',
+                    required: ['id', 'nombre', 'especie'],
+                    properties: {
+                        id: { type: 'integer', example: 1 },
+                        nombre: { type: 'string', example: 'Firu' },
+                        especie: { type: 'string', example: 'perro' },
+                        hambre: { type: 'integer', example: 35 },
+                        felicidad: { type: 'integer', example: 68 },
+                    },
+                },
             },
         },
     },
@@ -324,6 +346,189 @@ app.post('/api/monedas/:mascota_id/gastar', async (req, res) => {
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: 'Error actualizando la base de datos' });
+    }
+});
+
+/**
+ * @swagger
+ * /api/mascotas:
+ *   get:
+ *     summary: Listar todas las mascotas
+ *     description: Devuelve el espejo en Neon de todas las mascotas administradas por Django. Endpoint publico pensado para que una IA externa u otro consumidor pueda leer el estado real y actual de las mascotas.
+ *     responses:
+ *       200:
+ *         description: Lista de mascotas
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Mascota'
+ *   post:
+ *     summary: Crear o sincronizar una mascota (upsert)
+ *     description: Inserta una mascota con el id que le asigno Django, o actualiza sus datos si ese id ya existe (upsert por id). Lo usa Django cada vez que se crea, edita, alimenta o hace jugar a una mascota, para mantener Neon sincronizado.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/MascotaEntrada'
+ *     responses:
+ *       200:
+ *         description: Mascota creada o actualizada
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Mascota'
+ *       400:
+ *         description: Faltan campos obligatorios (id, nombre, especie)
+ */
+app.get('/api/mascotas', async (req, res) => {
+    try {
+        const resultado = await pool.query(
+            'SELECT id, nombre, especie, hambre, felicidad, actualizado_en FROM mascotas ORDER BY id'
+        );
+        res.json(resultado.rows);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Error consultando la base de datos' });
+    }
+});
+
+app.post('/api/mascotas', async (req, res) => {
+    const { id, nombre, especie, hambre, felicidad } = req.body;
+    if (!id || !nombre || !especie) {
+        return res.status(400).json({ error: 'id, nombre y especie son obligatorios' });
+    }
+    try {
+        const resultado = await pool.query(
+            `INSERT INTO mascotas (id, nombre, especie, hambre, felicidad, actualizado_en)
+             VALUES ($1, $2, $3, COALESCE($4, 50), COALESCE($5, 50), now())
+             ON CONFLICT (id) DO UPDATE
+                SET nombre = EXCLUDED.nombre,
+                    especie = EXCLUDED.especie,
+                    hambre = EXCLUDED.hambre,
+                    felicidad = EXCLUDED.felicidad,
+                    actualizado_en = now()
+             RETURNING id, nombre, especie, hambre, felicidad, actualizado_en`,
+            [id, nombre, especie, hambre, felicidad]
+        );
+        res.json(resultado.rows[0]);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Error guardando la mascota' });
+    }
+});
+
+/**
+ * @swagger
+ * /api/mascotas/{id}:
+ *   get:
+ *     summary: Detalle de una mascota
+ *     description: Devuelve el estado real y actual (hambre, felicidad) de una mascota puntual, guardado en Neon.
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: integer }
+ *     responses:
+ *       200:
+ *         description: Datos de la mascota
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Mascota'
+ *       404:
+ *         description: No existe una mascota con ese id
+ *   put:
+ *     summary: Actualizar una mascota existente
+ *     description: Actualiza nombre, especie, hambre y/o felicidad de una mascota ya existente. Lo usa Django al editar, alimentar o hacer jugar a una mascota.
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: integer }
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/MascotaEntrada'
+ *     responses:
+ *       200:
+ *         description: Mascota actualizada
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Mascota'
+ *       404:
+ *         description: No existe una mascota con ese id
+ *   delete:
+ *     summary: Eliminar una mascota
+ *     description: Borra la mascota de Neon (y su saldo de monedas, si tenia). Lo usa Django cuando se elimina una mascota desde la app.
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: integer }
+ *     responses:
+ *       200:
+ *         description: Confirmacion del borrado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 ok: { type: boolean, example: true }
+ */
+app.get('/api/mascotas/:id', async (req, res) => {
+    try {
+        const resultado = await pool.query(
+            'SELECT id, nombre, especie, hambre, felicidad, actualizado_en FROM mascotas WHERE id = $1',
+            [req.params.id]
+        );
+        if (!resultado.rows.length) {
+            return res.status(404).json({ error: 'No existe una mascota con ese id' });
+        }
+        res.json(resultado.rows[0]);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Error consultando la base de datos' });
+    }
+});
+
+app.put('/api/mascotas/:id', async (req, res) => {
+    const { nombre, especie, hambre, felicidad } = req.body;
+    try {
+        const resultado = await pool.query(
+            `UPDATE mascotas
+                SET nombre = COALESCE($2, nombre),
+                    especie = COALESCE($3, especie),
+                    hambre = COALESCE($4, hambre),
+                    felicidad = COALESCE($5, felicidad),
+                    actualizado_en = now()
+             WHERE id = $1
+             RETURNING id, nombre, especie, hambre, felicidad, actualizado_en`,
+            [req.params.id, nombre, especie, hambre, felicidad]
+        );
+        if (!resultado.rows.length) {
+            return res.status(404).json({ error: 'No existe una mascota con ese id' });
+        }
+        res.json(resultado.rows[0]);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Error actualizando la mascota' });
+    }
+});
+
+app.delete('/api/mascotas/:id', async (req, res) => {
+    try {
+        await pool.query('DELETE FROM monedas WHERE mascota_id = $1', [req.params.id]);
+        await pool.query('DELETE FROM mascotas WHERE id = $1', [req.params.id]);
+        res.json({ ok: true });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Error eliminando la mascota' });
     }
 });
 
