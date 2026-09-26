@@ -18,3 +18,11 @@ INSERT INTO curiosidades (especie, texto) VALUES
 ('dragon', 'A los dragones virtuales les encanta el pastel.'),
 ('robot', 'Las mascotas robot no sienten hambre real, pero igual hay que "alimentarlas" por diversion.'),
 ('robot', 'Un robot mascota nunca duerme, pero si se le puede bajar el nivel de energia (felicidad).');
+
+-- Monedas del juego: cada mascota (identificada por su id en la base de datos
+-- de Django/SQLite) tiene un saldo guardado aca en Neon. Se ganan jugando el
+-- minijuego y se gastan en la tienda.
+CREATE TABLE IF NOT EXISTS monedas (
+    mascota_id INTEGER PRIMARY KEY,
+    cantidad INTEGER NOT NULL DEFAULT 0
+);

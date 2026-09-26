@@ -41,6 +41,12 @@ para ver el JSON crudo.
 3. Build command: `npm install`. Start command: `npm start`.
 4. En Environment agregar la variable `DATABASE_URL` con el connection
    string de Neon.
+
+   No hace falta agregar nada mas: Render define automaticamente la
+   variable `RENDER_EXTERNAL_URL` con la URL publica del servicio, y el
+   microservicio la usa para que el boton "Try it out" de Swagger funcione
+   bien (si se usara una URL relativa en vez de la real, el navegador
+   bloquea esas peticiones con un error de CORS).
 5. Una vez desplegado, Render da una URL publica, por ejemplo:
    `https://microservicio-curiosidades.onrender.com` — al abrirla en el
    navegador redirige directo a la documentación Swagger.
