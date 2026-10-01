@@ -1,17 +1,6 @@
-# Blueprint de los 12 CRUD + 2 servicios de consulta resiliente.
-<<<<<<< HEAD
-# Render crea cada entrada como un servicio web independiente.
-services:
-=======
-# Cada entrada se despliega como un servicio web independiente.
 
 services:
-
-  # =========================
   # NODE.JS
-  # =========================
-
->>>>>>> 7a6df03fd809b68140c2da2594444d6196fbaab0
   - type: web
     name: mascotas-nodejs-insertar
     runtime: docker
@@ -23,10 +12,7 @@ services:
         sync: false
       - key: SERVICE_NAME
         value: mascotas-nodejs-insertar
-<<<<<<< HEAD
-=======
 
->>>>>>> 7a6df03fd809b68140c2da2594444d6196fbaab0
   - type: web
     name: mascotas-nodejs-actualizar
     runtime: docker
@@ -38,10 +24,7 @@ services:
         sync: false
       - key: SERVICE_NAME
         value: mascotas-nodejs-actualizar
-<<<<<<< HEAD
-=======
 
->>>>>>> 7a6df03fd809b68140c2da2594444d6196fbaab0
   - type: web
     name: mascotas-nodejs-eliminar
     runtime: docker
@@ -53,15 +36,8 @@ services:
         sync: false
       - key: SERVICE_NAME
         value: mascotas-nodejs-eliminar
-<<<<<<< HEAD
-=======
 
-
-  # =========================
   # PYTHON
-  # =========================
-
->>>>>>> 7a6df03fd809b68140c2da2594444d6196fbaab0
   - type: web
     name: mascotas-python-insertar
     runtime: docker
@@ -73,10 +49,7 @@ services:
         sync: false
       - key: SERVICE_NAME
         value: mascotas-python-insertar
-<<<<<<< HEAD
-=======
 
->>>>>>> 7a6df03fd809b68140c2da2594444d6196fbaab0
   - type: web
     name: mascotas-python-actualizar
     runtime: docker
@@ -88,10 +61,7 @@ services:
         sync: false
       - key: SERVICE_NAME
         value: mascotas-python-actualizar
-<<<<<<< HEAD
-=======
 
->>>>>>> 7a6df03fd809b68140c2da2594444d6196fbaab0
   - type: web
     name: mascotas-python-eliminar
     runtime: docker
@@ -103,15 +73,8 @@ services:
         sync: false
       - key: SERVICE_NAME
         value: mascotas-python-eliminar
-<<<<<<< HEAD
-=======
 
-
-  # =========================
   # JAVA
-  # =========================
-
->>>>>>> 7a6df03fd809b68140c2da2594444d6196fbaab0
   - type: web
     name: mascotas-java-insertar
     runtime: docker
@@ -123,10 +86,7 @@ services:
         sync: false
       - key: SERVICE_NAME
         value: mascotas-java-insertar
-<<<<<<< HEAD
-=======
 
->>>>>>> 7a6df03fd809b68140c2da2594444d6196fbaab0
   - type: web
     name: mascotas-java-actualizar
     runtime: docker
@@ -138,10 +98,7 @@ services:
         sync: false
       - key: SERVICE_NAME
         value: mascotas-java-actualizar
-<<<<<<< HEAD
-=======
 
->>>>>>> 7a6df03fd809b68140c2da2594444d6196fbaab0
   - type: web
     name: mascotas-java-eliminar
     runtime: docker
@@ -153,15 +110,8 @@ services:
         sync: false
       - key: SERVICE_NAME
         value: mascotas-java-eliminar
-<<<<<<< HEAD
-=======
 
-
-  # =========================
   # PHP
-  # =========================
-
->>>>>>> 7a6df03fd809b68140c2da2594444d6196fbaab0
   - type: web
     name: mascotas-php-insertar
     runtime: docker
@@ -173,10 +123,7 @@ services:
         sync: false
       - key: SERVICE_NAME
         value: mascotas-php-insertar
-<<<<<<< HEAD
-=======
 
->>>>>>> 7a6df03fd809b68140c2da2594444d6196fbaab0
   - type: web
     name: mascotas-php-actualizar
     runtime: docker
@@ -188,10 +135,7 @@ services:
         sync: false
       - key: SERVICE_NAME
         value: mascotas-php-actualizar
-<<<<<<< HEAD
-=======
 
->>>>>>> 7a6df03fd809b68140c2da2594444d6196fbaab0
   - type: web
     name: mascotas-php-eliminar
     runtime: docker
@@ -203,15 +147,8 @@ services:
         sync: false
       - key: SERVICE_NAME
         value: mascotas-php-eliminar
-<<<<<<< HEAD
-=======
 
-
-  # =========================
-  # RESILIENCIA
-  # =========================
-
->>>>>>> 7a6df03fd809b68140c2da2594444d6196fbaab0
+  # CONSULTA Y RESILIENCIA
   - type: web
     name: mascotas-consulta-python
     runtime: docker
@@ -223,10 +160,7 @@ services:
         sync: false
       - key: SERVICE_NAME
         value: mascotas-consulta-python
-<<<<<<< HEAD
-=======
 
->>>>>>> 7a6df03fd809b68140c2da2594444d6196fbaab0
   - type: web
     name: mascotas-consulta-node
     runtime: docker
@@ -237,8 +171,4 @@ services:
       - key: DATABASE_URL
         sync: false
       - key: SERVICE_NAME
-<<<<<<< HEAD
         value: mascotas-consulta-node
-=======
-        value: mascotas-consulta-node
->>>>>>> 7a6df03fd809b68140c2da2594444d6196fbaab0
