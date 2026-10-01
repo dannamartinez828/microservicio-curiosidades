@@ -1,0 +1,157 @@
+# Blueprint de los 12 CRUD + 2 servicios de consulta resiliente.
+# Render crea cada entrada como un servicio web independiente.
+services:
+  - type: web
+    name: mascotas-nodejs-insertar
+    runtime: docker
+    plan: free
+    rootDir: microservicio/nodejs/insertar
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: SERVICE_NAME
+        value: mascotas-nodejs-insertar
+  - type: web
+    name: mascotas-nodejs-actualizar
+    runtime: docker
+    plan: free
+    rootDir: microservicio/nodejs/actualizar
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: SERVICE_NAME
+        value: mascotas-nodejs-actualizar
+  - type: web
+    name: mascotas-nodejs-eliminar
+    runtime: docker
+    plan: free
+    rootDir: microservicio/nodejs/eliminar
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: SERVICE_NAME
+        value: mascotas-nodejs-eliminar
+  - type: web
+    name: mascotas-python-insertar
+    runtime: docker
+    plan: free
+    rootDir: microservicio/python/insertar
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: SERVICE_NAME
+        value: mascotas-python-insertar
+  - type: web
+    name: mascotas-python-actualizar
+    runtime: docker
+    plan: free
+    rootDir: microservicio/python/actualizar
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: SERVICE_NAME
+        value: mascotas-python-actualizar
+  - type: web
+    name: mascotas-python-eliminar
+    runtime: docker
+    plan: free
+    rootDir: microservicio/python/eliminar
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: SERVICE_NAME
+        value: mascotas-python-eliminar
+  - type: web
+    name: mascotas-java-insertar
+    runtime: docker
+    plan: free
+    rootDir: microservicio/java/insertar
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: SERVICE_NAME
+        value: mascotas-java-insertar
+  - type: web
+    name: mascotas-java-actualizar
+    runtime: docker
+    plan: free
+    rootDir: microservicio/java/actualizar
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: SERVICE_NAME
+        value: mascotas-java-actualizar
+  - type: web
+    name: mascotas-java-eliminar
+    runtime: docker
+    plan: free
+    rootDir: microservicio/java/eliminar
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: SERVICE_NAME
+        value: mascotas-java-eliminar
+  - type: web
+    name: mascotas-php-insertar
+    runtime: docker
+    plan: free
+    rootDir: microservicio/php/insertar
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: SERVICE_NAME
+        value: mascotas-php-insertar
+  - type: web
+    name: mascotas-php-actualizar
+    runtime: docker
+    plan: free
+    rootDir: microservicio/php/actualizar
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: SERVICE_NAME
+        value: mascotas-php-actualizar
+  - type: web
+    name: mascotas-php-eliminar
+    runtime: docker
+    plan: free
+    rootDir: microservicio/php/eliminar
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: SERVICE_NAME
+        value: mascotas-php-eliminar
+  - type: web
+    name: mascotas-consulta-python
+    runtime: docker
+    plan: free
+    rootDir: microservicio/resiliencia/consulta-python
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: SERVICE_NAME
+        value: mascotas-consulta-python
+  - type: web
+    name: mascotas-consulta-node
+    runtime: docker
+    plan: free
+    rootDir: microservicio/resiliencia/consulta-node
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: SERVICE_NAME
+        value: mascotas-consulta-node
