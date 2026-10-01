@@ -1,0 +1,6 @@
+const express=require('express'); const cors=require('cors'); const {Pool}=require('pg');
+const app=express(); app.use(cors()); app.use(express.json());
+const pool=new Pool({connectionString:process.env.DATABASE_URL,ssl:{rejectUnauthorized:false}});
+app.get('/health',(_q,r)=>r.json({status:'ok',servicio:process.env.SERVICE_NAME||'node'}));
+function datos(b){b=b||{};return {nombre:String(b.nombre||'').trim(),especie:String(b.especie||'perro').trim(),hambre:Number.isFinite(Number(b.hambre))?Number(b.hambre):50,felicidad:Number.isFinite(Number(b.felicidad))?Number(b.felicidad):50};}
+app.delete('/api/mascotas/:id',async(q,r)=>{const id=Number(q.params.id);if(!Number.isInteger(id))return r.status(400).json({error:'id invalido'});try{const x=await pool.query('DELETE FROM mascotas_mascota WHERE id=$1 RETURNING id',[id]);if(!x.rowCount)return r.status(404).json({error:'Mascota no encontrada'});r.json({ok:true,id:x.rows[0].id})}catch(e){console.error(e);r.status(500).json({error:'Error eliminando mascota'})}});app.listen(process.env.PORT||10000);
