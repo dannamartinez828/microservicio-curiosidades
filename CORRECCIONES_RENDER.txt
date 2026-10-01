@@ -1,0 +1,7 @@
+CORRECCIONES PARA RENDER
+
+1. render.yaml esta en la raiz del repositorio microservicio.
+2. Los rootDir son relativos a esa raiz: nodejs/insertar, python/insertar, etc.
+3. Los servicios Node usan npm install --omit=dev.
+4. DATABASE_URL se configura en Render como variable de entorno. No guardes la contrasena en Git.
+5. La consulta resiliente usa Python como principal y Node.js como respaldo.

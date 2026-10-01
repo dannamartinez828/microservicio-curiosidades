@@ -1,0 +1,6 @@
+const express=require('express'); const cors=require('cors'); const {Pool}=require('pg');
+const app=express(); app.use(cors()); app.use(express.json());
+const pool=new Pool({connectionString:process.env.DATABASE_URL,ssl:{rejectUnauthorized:false}});
+app.get('/health',(_q,r)=>r.json({status:'ok',servicio:process.env.SERVICE_NAME||'node'}));
+function datos(b){b=b||{};return {nombre:String(b.nombre||'').trim(),especie:String(b.especie||'perro').trim(),hambre:Number.isFinite(Number(b.hambre))?Number(b.hambre):50,felicidad:Number.isFinite(Number(b.felicidad))?Number(b.felicidad):50};}
+app.post('/api/mascotas',async(q,r)=>{const d=datos(q.body);if(!d.nombre)return r.status(400).json({error:'nombre es obligatorio'});try{const x=await pool.query(`INSERT INTO mascotas_mascota (nombre,especie,hambre,felicidad,fecha_creacion,ultima_interaccion) VALUES ($1,$2,$3,$4,NOW(),NOW()) RETURNING *`,[d.nombre,d.especie,d.hambre,d.felicidad]);r.status(201).json(x.rows[0])}catch(e){console.error(e);r.status(500).json({error:'Error insertando mascota'})}});app.listen(process.env.PORT||10000);

@@ -1,0 +1,18 @@
+IMPORTANTE
+
+Este archivo render.yaml esta en la raiz del repositorio de microservicios.
+
+Si el repositorio de GitHub contiene directamente esta carpeta como raiz,
+Render debe usar:
+
+microservicio/
+  render.yaml
+  nodejs/
+  python/
+  java/
+  php/
+  resiliencia/
+
+Por eso los rootDir del render.yaml NO llevan "microservicio/" delante.
+Ejemplo correcto: nodejs/insertar
+Ejemplo incorrecto: microservicio/nodejs/insertar
