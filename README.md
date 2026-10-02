@@ -6,8 +6,7 @@ vista `ver_curiosidades` de la app Django de mascotas virtuales.
 
 ## Endpoints
 
-- `GET /` -> redirige a la documentación Swagger (`/api-docs`).
-- `GET /health` -> health check simple en JSON.
+- `GET /` -> estado del servicio y de la base de datos en JSON (en vez de /health).
 - `GET /api/curiosidades` -> todas las curiosidades.
 - `GET /api/curiosidades/:especie` -> curiosidades filtradas por especie
   (perro, gato, dragon, robot).
