@@ -69,35 +69,36 @@ const swaggerSpec = swaggerJsdoc({
 
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
-// la raiz redirige a la documentacion swagger, para que sea lo primero que
-// se ve al entrar a la URL del servicio (ej: https://tu-servicio.onrender.com/)
-app.get('/', (req, res) => {
-    res.redirect('/api-docs');
-});
-
 /**
  * @swagger
- * /health:
+ * /:
  *   get:
- *     summary: Health check
- *     description: Confirma que el microservicio esta corriendo (util para verificar el deploy en Render).
+ *     summary: Estado del servicio
+ *     description: Muestra el estado del microservicio y si hay conexion con la base de datos (Neon).
  *     responses:
  *       200:
- *         description: El servicio esta arriba
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: ok
- *                 mensaje:
- *                   type: string
- *                   example: microservicio-curiosidades funcionando
+ *         description: Servicio y base de datos funcionando
+ *       503:
+ *         description: Sin conexion con la base de datos
  */
-app.get('/health', (req, res) => {
-    res.json({ status: 'ok', mensaje: 'microservicio-curiosidades funcionando' });
+app.get('/', async (req, res) => {
+    let bd = 'conectada';
+    try {
+        await Promise.race([
+            pool.query('SELECT 1'),
+            new Promise((_, rechazar) => setTimeout(() => rechazar(new Error('timeout')), 10000)),
+        ]);
+    } catch (err) {
+        bd = 'error';
+    }
+    res.status(bd === 'conectada' ? 200 : 503).json({
+        servicio: 'microservicio-curiosidades',
+        lenguaje: 'Node.js (Express)',
+        operacion: 'LECTURA',
+        estado: bd === 'conectada' ? 'ok' : 'error',
+        base_de_datos: bd,
+        documentacion: '/api-docs',
+    });
 });
 
 /**
