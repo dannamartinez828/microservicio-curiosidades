@@ -41,9 +41,10 @@ func conectarBD() error {
 	if err != nil {
 		return err
 	}
+	// el driver solo acepta disable, require, verify-ca y verify-full
 	sslmode := u.Query().Get("sslmode")
-	if sslmode == "" {
-		sslmode = "prefer"
+	if sslmode == "" || sslmode == "prefer" || sslmode == "allow" {
+		sslmode = "require"
 	}
 	q := url.Values{}
 	q.Set("sslmode", sslmode)

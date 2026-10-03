@@ -19,8 +19,8 @@ import (
 )
 
 const (
-	servicio  = "ms-actualizar-go"
-	operacion = "ACTUALIZACION"
+	servicio  = "ms-consultar-go"
+	operacion = "LECTURA (respaldo)"
 )
 
 var (
@@ -41,10 +41,9 @@ func conectarBD() error {
 	if err != nil {
 		return err
 	}
-	// el driver solo acepta disable, require, verify-ca y verify-full
 	sslmode := u.Query().Get("sslmode")
-	if sslmode == "" || sslmode == "prefer" || sslmode == "allow" {
-		sslmode = "require"
+	if sslmode == "" {
+		sslmode = "prefer"
 	}
 	q := url.Values{}
 	q.Set("sslmode", sslmode)
@@ -68,7 +67,7 @@ func main() {
 	}
 	puerto := os.Getenv("PORT")
 	if puerto == "" {
-		puerto = "7002"
+		puerto = "7004"
 	}
 	srv := &http.Server{
 		Addr:              ":" + puerto,
@@ -103,9 +102,22 @@ func enrutar(w http.ResponseWriter, r *http.Request) {
 		} else {
 			noPermitido(w)
 		}
-	case rutaID.MatchString(ruta):
-		if r.Method == http.MethodPut {
-			actualizar(w, r, idDe(ruta))
+	case ruta == "/api/curiosidades":
+		if r.Method == http.MethodGet {
+			listarCuriosidades(w, r, "")
+		} else {
+			noPermitido(w)
+		}
+	case strings.HasPrefix(ruta, "/api/curiosidades/") && strings.TrimPrefix(ruta, "/api/curiosidades/") != "" &&
+		!strings.Contains(strings.TrimPrefix(ruta, "/api/curiosidades/"), "/"):
+		if r.Method == http.MethodGet {
+			listarCuriosidades(w, r, strings.TrimPrefix(ruta, "/api/curiosidades/"))
+		} else {
+			noPermitido(w)
+		}
+	case rutaMonedas.MatchString(ruta):
+		if r.Method == http.MethodGet {
+			saldoMonedas(w, r, idMonedas(ruta))
 		} else {
 			noPermitido(w)
 		}
@@ -149,56 +161,78 @@ type curiosidad struct {
 	Texto   string `json:"texto"`
 }
 
-// ---------- Actualizar ----------
-func actualizar(w http.ResponseWriter, r *http.Request, id int64) {
-	cuerpo := leerJSON(r)
-	especie := strings.ToLower(campo(cuerpo, "especie"))
-	texto := campo(cuerpo, "texto")
-	if especie == "" && texto == "" {
-		enviar(w, http.StatusBadRequest, mensajeError("envia especie y/o texto"))
-		return
-	}
-	if especie != "" && !especies[especie] {
-		enviar(w, http.StatusBadRequest, mensajeError("especie invalida"))
-		return
-	}
+// ---------- Consultas (solo lectura): mismo contrato que el microservicio Node ----------
+var rutaMonedas = regexp.MustCompile(`^/api/monedas/(\d+)$`)
 
-	// los campos vacios se mandan como NULL y COALESCE conserva el valor actual
-	var pEspecie, pTexto any
-	if especie != "" {
-		pEspecie = especie
-	}
-	if texto != "" {
-		pTexto = texto
-	}
+type saldo struct {
+	MascotaID int64 `json:"mascota_id"`
+	Cantidad  int   `json:"cantidad"`
+}
 
+func idMonedas(ruta string) int64 {
+	m := rutaMonedas.FindStringSubmatch(ruta)
+	id, err := strconv.ParseInt(m[1], 10, 64)
+	if err != nil {
+		return -1
+	}
+	return id
+}
+
+// GET /api/curiosidades y GET /api/curiosidades/{especie}
+func listarCuriosidades(w http.ResponseWriter, r *http.Request, especie string) {
 	ctx, cancel := context.WithTimeout(r.Context(), 30*time.Second)
 	defer cancel()
-	var c curiosidad
-	err := db.QueryRowContext(ctx,
-		"UPDATE curiosidades SET especie = COALESCE($1, especie), texto = COALESCE($2, texto) "+
-			"WHERE id = $3 RETURNING id, especie, texto",
-		pEspecie, pTexto, id,
-	).Scan(&c.ID, &c.Especie, &c.Texto)
-	if err == sql.ErrNoRows {
-		enviar(w, http.StatusNotFound, mensajeError("curiosidad no encontrada"))
-		return
+
+	var filas *sql.Rows
+	var err error
+	if especie == "" {
+		filas, err = db.QueryContext(ctx, "SELECT id, especie, texto FROM curiosidades ORDER BY id")
+	} else {
+		filas, err = db.QueryContext(ctx, "SELECT id, especie, texto FROM curiosidades WHERE especie = $1 ORDER BY id", especie)
 	}
 	if err != nil {
-		log.Println("error actualizando:", err)
-		enviar(w, http.StatusInternalServerError, mensajeError("Error escribiendo en la base de datos"))
+		log.Println("error consultando curiosidades:", err)
+		enviar(w, http.StatusInternalServerError, mensajeError("Error consultando la base de datos"))
 		return
 	}
-	enviar(w, http.StatusOK, c)
+	defer filas.Close()
+
+	lista := []curiosidad{}
+	for filas.Next() {
+		var c curiosidad
+		if err := filas.Scan(&c.ID, &c.Especie, &c.Texto); err != nil {
+			log.Println("error leyendo fila:", err)
+			enviar(w, http.StatusInternalServerError, mensajeError("Error consultando la base de datos"))
+			return
+		}
+		lista = append(lista, c)
+	}
+	enviar(w, http.StatusOK, lista)
+}
+
+// GET /api/monedas/{mascota_id}: si la mascota nunca ha jugado, el saldo es 0
+func saldoMonedas(w http.ResponseWriter, r *http.Request, id int64) {
+	ctx, cancel := context.WithTimeout(r.Context(), 30*time.Second)
+	defer cancel()
+	var cantidad int
+	err := db.QueryRowContext(ctx, "SELECT cantidad FROM monedas WHERE mascota_id = $1", id).Scan(&cantidad)
+	if err != nil && err != sql.ErrNoRows {
+		log.Println("error consultando monedas:", err)
+		enviar(w, http.StatusInternalServerError, mensajeError("Error consultando la base de datos"))
+		return
+	}
+	enviar(w, http.StatusOK, saldo{MascotaID: id, Cantidad: cantidad})
 }
 
 const especificacion = `{
   "openapi": "3.0.0",
-  "info": {"title": "API - Microservicio de ACTUALIZACION (Go)", "version": "1.0.0", "description": "Actualiza curiosidades de mascotas en la tabla curiosidades de Neon."},
+  "info": {"title": "API - Microservicio de CONSULTA de respaldo (Go)", "version": "1.0.0", "description": "Servicio de lectura de respaldo: si el microservicio principal en Node.js falla, la app Django consulta este para seguir mostrando curiosidades y monedas."},
   "servers": [{"url": "%s"}],
   "paths": {
     "/": {"get": {"summary": "Estado del servicio", "responses": {"200": {"description": "Servicio y base de datos funcionando"}, "503": {"description": "Sin conexion con la base de datos"}}}},
-    "/api/curiosidades/{id}": {"put": {"summary": "Actualizar una curiosidad", "parameters": [{"in": "path", "name": "id", "required": true, "schema": {"type": "integer", "example": 1}}], "requestBody": {"required": true, "content": {"application/json": {"schema": {"type": "object", "properties": {"especie": {"type": "string", "enum": ["perro", "gato", "dragon", "robot"], "example": "gato"}, "texto": {"type": "string", "example": "Texto actualizado."}}}}}}, "responses": {"200": {"description": "Curiosidad actualizada (devuelve id, especie y texto)"}, "400": {"description": "Datos invalidos"}, "404": {"description": "Curiosidad no encontrada"}, "500": {"description": "Error escribiendo en la base de datos"}}}}
+    "/api/curiosidades": {"get": {"summary": "Todas las curiosidades", "responses": {"200": {"description": "Lista de curiosidades"}, "500": {"description": "Error consultando la base de datos"}}}},
+    "/api/curiosidades/{especie}": {"get": {"summary": "Curiosidades de una especie", "parameters": [{"in": "path", "name": "especie", "required": true, "schema": {"type": "string", "example": "perro"}}], "responses": {"200": {"description": "Lista de curiosidades de esa especie"}, "500": {"description": "Error consultando la base de datos"}}}},
+    "/api/monedas/{mascota_id}": {"get": {"summary": "Saldo de monedas de una mascota", "parameters": [{"in": "path", "name": "mascota_id", "required": true, "schema": {"type": "integer", "example": 1}}], "responses": {"200": {"description": "Saldo actual (0 si nunca ha jugado)"}, "500": {"description": "Error consultando la base de datos"}}}}
   }
 }`
 
@@ -211,7 +245,7 @@ func openapi(w http.ResponseWriter, r *http.Request) {
 func apiDocs(w http.ResponseWriter) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	io.WriteString(w, `<!doctype html>
-<html><head><meta charset="utf-8"><title>API - Actualizar (Go)</title>
+<html><head><meta charset="utf-8"><title>API - Consultar (Go, respaldo)</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui.css"></head>
 <body><div id="swagger-ui"></div>
 <script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui-bundle.js"></script>
